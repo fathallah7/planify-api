@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['tenant_id', 'created_by', 'name', 'description', 'status'])]
+#[Fillable(['created_by', 'name', 'description', 'status'])]
 class Project extends Model
 {
-    use HasUuids;
+    use HasUuids, BelongsToTenant;
 
     public function tenant()
     {
