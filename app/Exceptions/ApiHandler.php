@@ -21,34 +21,41 @@ class ApiHandler
   {
     if ($request->is('api/*') || $request->expectsJson()) {
       if ($e instanceof ModelNotFoundException || $e instanceof NotFoundHttpException) {
-        return $this->error(message:'Resource not found', status: 404);
+        return $this->error(message: 'Resource not found', status: 404);
       }
 
       if ($e instanceof MethodNotAllowedHttpException) {
-        return $this->error(message:'Method not allowed', status: 405);
+        return $this->error(message: 'Method not allowed', status: 405);
       }
 
       if ($e instanceof AuthenticationException) {
-        return $this->error(message:'Unauthenticated', status: 401);
+        return $this->error(message: 'Unauthenticated', status: 401);
       }
 
       if ($e instanceof AuthorizationException) {
-        return $this->error(message:'Forbidden', status: 403);
+        return $this->error(message: 'Forbidden', status: 403);
       }
 
       if ($e instanceof ThrottleRequestsException) {
-        return $this->error(message:'Too many requests', status: 429);
+        return $this->error(message: 'Too many requests', status: 429);
       }
 
       if ($e instanceof ValidationException) {
         return $this->error(
-          message:'Validation failed',
+          message: 'Validation failed',
           errors: $e->errors(),
           status: 422
         );
       }
 
-      return $this->error(message:'Server error', status: 500);
+      if ($e instanceof BusinessException) {
+        return $this->error(
+          message: $e->getMessage(),
+          status: $e->getStatusCode(),
+        );
+      }
+
+      return $this->error(message: 'Server error', status: 500);
     }
 
     return null;
