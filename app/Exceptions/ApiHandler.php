@@ -12,6 +12,7 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use App\Traits\ApiResponse;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class ApiHandler
 {
@@ -32,8 +33,14 @@ class ApiHandler
         return $this->error(message: 'Unauthenticated', status: 401);
       }
 
-      if ($e instanceof AuthorizationException) {
-        return $this->error(message: 'Forbidden', status: 403);
+      if ($e instanceof AuthorizationException || $e instanceof AccessDeniedHttpException) {
+        $message = $e->getMessage() ?: 'Forbidden';
+
+        if ($message === 'This action is unauthorized.') {
+          $message = 'You do not have permission to perform this action.';
+        }
+
+        return $this->error(message: $message, status: 403);
       }
 
       if ($e instanceof ThrottleRequestsException) {
@@ -43,8 +50,8 @@ class ApiHandler
       if ($e instanceof ValidationException) {
         return $this->error(
           message: 'Validation failed',
-          errors: $e->errors(),
-          status: 422
+          status: 422,
+          errors: $e->errors()
         );
       }
 
