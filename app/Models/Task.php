@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['tenant_id', 'project_id', 'assigned_to', 'created_by', 'title', 'description', 'status', 'priority', 'due_date'])]
+#[Fillable(['project_id', 'assigned_to', 'created_by', 'title', 'description', 'status', 'priority', 'due_date'])]
 class Task extends Model
 {
-    use HasUuids;
+    use HasUuids, BelongsToTenant;
 
     protected function casts(): array
     {
