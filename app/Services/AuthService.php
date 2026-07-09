@@ -37,6 +37,24 @@ class AuthService
     ];
   }
 
+  public function registerMember(array $data): array
+  {
+
+    $user = User::create([
+      'name'      => $data['name'],
+      'email'     => $data['email'],
+      'password'  => Hash::make($data['password']),
+      'role'      => 'member',
+    ]);
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return [
+      'token'  => $token,
+      'user'   => $user,
+    ];
+  }
+
   public function login(array $data): ?array
   {
     $user = User::where('email', $data['email'])->first();

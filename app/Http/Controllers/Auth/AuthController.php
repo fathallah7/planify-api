@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterMemberRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Resources\AuthMemberResource;
 use App\Http\Resources\AuthResource;
 use App\Services\AuthService;
 use App\Traits\ApiResponse;
@@ -23,6 +25,12 @@ class AuthController extends Controller
     {
         $result = $this->authService->register($request->validated());
         return $this->success(data: new AuthResource($result), message: 'Registered successfully');
+    }
+
+    public function registerMember(RegisterMemberRequest $request): AuthMemberResource|JsonResponse
+    {
+        $result = $this->authService->registerMember($request->validated());
+        return $this->success(data: new AuthMemberResource($result), message: 'Member registered successfully');
     }
 
     public function login(LoginRequest $request): AuthResource|JsonResponse
