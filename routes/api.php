@@ -19,4 +19,7 @@ Route::prefix('auth')->group(function () {
 Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
     Route::apiResource('projects', ProjectController::class);
     Route::apiResource('projects.tasks', TaskController::class);
+    Route::post('/invitations', [InvitationController::class, 'invite']);
 });
+
+Route::get('/invitations/accept/{token}', [InvitationController::class, 'accept']);
