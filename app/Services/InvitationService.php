@@ -42,7 +42,7 @@ class InvitationService
       'expires_at' => now()->addDays(7),
     ]);
 
-    Mail::to($data['email'])->send(new InvitationMail($invitation, $tenant));
+    Mail::to($data['email'])->queue(new InvitationMail($invitation, $tenant));
 
     return $invitation;
   }
