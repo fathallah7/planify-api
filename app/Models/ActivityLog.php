@@ -11,7 +11,7 @@ class ActivityLog extends Model
 {
     use HasUuids;
 
-    public $timestamps = false;
+    const UPDATED_AT = null;
 
     protected function casts(): array
     {
