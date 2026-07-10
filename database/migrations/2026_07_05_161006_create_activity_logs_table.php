@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('action'); // created, updated, deleted, assigned
             $table->string('model_type'); // project, task
             $table->uuid('model_id');
-            $table->json('changes')->nullable(); // ايه اللي اتغير
+            $table->json('changes')->nullable();
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             $table->timestamp('created_at');
