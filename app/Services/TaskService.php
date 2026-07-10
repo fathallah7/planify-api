@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\TaskAssigned;
+use App\Events\TaskCreated;
 use App\Exceptions\BusinessException;
 use App\Models\Project;
 use App\Models\Task;
@@ -27,7 +29,12 @@ class TaskService
     $data['created_by']  = $user->id;
     $data['project_id']  = $project->id;
 
-    return Task::create($data);
+    $task = Task::create($data);
+
+    event(new TaskCreated($task, $user));
+    event(new TaskAssigned($task, $user));
+
+    return $task;
   }
 
   public function updateTask(Task $task, array $data, User $user): Task
@@ -40,6 +47,11 @@ class TaskService
     }
 
     $task->update($data);
+
+    if (isset($data['assigned_to']) && $data['assigned_to'] !== $task->assigned_to) {
+      event(new TaskAssigned($task, $user));
+    }
+
     return $task;
   }
 
