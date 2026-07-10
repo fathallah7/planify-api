@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\ProjectCreated;
 use App\Exceptions\BusinessException;
 use App\Models\Project;
 use App\Models\User;
@@ -25,7 +26,11 @@ class ProjectService
 
     $data['created_by'] = $user->id;
 
-    return Project::create($data);
+    $project = Project::create($data);
+
+    event(new ProjectCreated($project, $user));
+
+    return $project;
   }
 
   public function updateProject(Project $project, array $data): Project
