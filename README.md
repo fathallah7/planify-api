@@ -1,6 +1,6 @@
 # Planify API
 
-A production-grade multi-tenant SaaS project management REST API built with Laravel 13 and PostgreSQL. Planify enables organizations to manage projects, tasks, and team collaboration with complete data isolation between tenants, role-based access control, and Stripe-powered subscription billing.
+A production-grade multi-tenant SaaS project management REST API built with Laravel 13 and PostgreSQL. Enables organizations to manage projects, tasks, and team collaboration with complete data isolation between tenants, role-based access control, and Stripe-powered subscription billing.
 
 ## Table of Contents
 
