@@ -35,7 +35,6 @@ Planify is a backend API designed for teams and organizations to manage their pr
 | Authentication | Laravel Sanctum |
 | Authorization | Laravel Policies |
 | Background Jobs | Laravel Queues (Database Driver) |
-| Real-time Chat | Laravel Reverb (WebSockets) |
 | Payments | Stripe |
 | Testing | Pest |
 | Containerization | Docker |
@@ -104,12 +103,6 @@ Planify is a backend API designed for teams and organizations to manage their pr
 - Stripe Webhooks for payment confirmation
 - Automatic account suspension on payment failure
 - Plan limit enforcement (projects, members)
-
-### Real-time Project Chat (Laravel Reverb)
-- WebSocket-based messaging per project
-- Real-time message delivery to project members
-- Message persistence in database
-- Tenant and project-scoped channels
 
 ---
 
@@ -193,16 +186,6 @@ Planify is a backend API designed for teams and organizations to manage their pr
 | changes | json | Changed fields (old/new values) |
 | created_at | timestamp | Log timestamp |
 
-### messages (Project Chat)
-| Column | Type | Description |
-|---|---|---|
-| id | UUID | Primary key |
-| tenant_id | UUID | FK to tenants |
-| project_id | UUID | FK to projects |
-| user_id | UUID | FK to users |
-| content | text | Message content |
-| created_at | timestamp | Sent at |
-
 ---
 
 ## API Reference
@@ -281,13 +264,6 @@ All project endpoints require authentication and tenant membership.
 | POST | /subscriptions | Subscribe to plan | Yes |
 | POST | /webhooks/stripe | Stripe webhook handler | No (Stripe signature) |
 
-### Project Chat
-
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| GET | /projects/{project}/messages | Get message history | Yes |
-| WebSocket | /app/{channel} | Real-time messaging | Yes |
-
 ---
 
 ## Role & Permission Matrix
@@ -305,7 +281,6 @@ All project endpoints require authentication and tenant membership.
 | View Tasks | Yes | Yes | Yes |
 | Send Invitation | Yes | Yes | No |
 | Accept Invitation | Yes | Yes | Yes |
-| Send Chat Message | Yes | Yes | Yes |
 
 ---
 
@@ -315,7 +290,7 @@ All project endpoints require authentication and tenant membership.
 |---|---|---|---|---|
 | Free | $0/month | 1 | 5 | Basic project management |
 | Basic | $9/month | 3 | 5 | + Email notifications |
-| Pro | $29/month | Unlimited | Unlimited | + Priority support, Chat |
+| Pro | $29/month | Unlimited | Unlimited | + Priority support |
 
 ---
 
@@ -337,25 +312,31 @@ planify-api/
 │   │   ├── Controllers/
 │   │   │   ├── Auth/
 │   │   │   │   └── AuthController.php
+│   │   │   ├── Controller.php
 │   │   │   ├── InvitationController.php
 │   │   │   ├── ProjectController.php
-│   │   │   └── TaskController.php
+│   │   │   ├── SubscriptionController.php
+│   │   │   ├── TaskController.php
+│   │   │   └── WebhookController.php
 │   │   ├── Middleware/
 │   │   │   └── TenantMiddleware.php
 │   │   ├── Requests/
 │   │   │   ├── Auth/
-│   │   │   │   ├── RegisterRequest.php
+│   │   │   │   ├── LoginRequest.php
 │   │   │   │   ├── RegisterMemberRequest.php
-│   │   │   │   └── LoginRequest.php
+│   │   │   │   └── RegisterRequest.php
 │   │   │   ├── Invitation/
 │   │   │   │   └── StoreInvitationRequest.php
 │   │   │   ├── Project/
 │   │   │   │   ├── StoreProjectRequest.php
 │   │   │   │   └── UpdateProjectRequest.php
+│   │   │   ├── Subscription/
+│   │   │   │   └── SubscribeRequest.php
 │   │   │   └── Task/
 │   │   │       ├── StoreTaskRequest.php
 │   │   │       └── UpdateTaskRequest.php
 │   │   └── Resources/
+│   │       ├── AuthMemberResource.php
 │   │       ├── AuthResource.php
 │   │       ├── InvitationResource.php
 │   │       ├── ProjectResource.php
@@ -371,10 +352,13 @@ planify-api/
 │   │   ├── Invitation.php
 │   │   ├── Plan.php
 │   │   ├── Project.php
+│   │   ├── Scopes/
+│   │   │   └── TenantScope.php
 │   │   ├── Task.php
 │   │   ├── Tenant.php
 │   │   └── User.php
 │   ├── Policies/
+│   │   ├── InvitationPolicy.php
 │   │   ├── ProjectPolicy.php
 │   │   └── TaskPolicy.php
 │   ├── Providers/
@@ -383,13 +367,18 @@ planify-api/
 │   │   ├── AuthService.php
 │   │   ├── InvitationService.php
 │   │   ├── ProjectService.php
+│   │   ├── SubscriptionService.php
 │   │   └── TaskService.php
 │   └── Traits/
 │       ├── ApiResponse.php
 │       └── BelongsToTenant.php
 ├── database/
+│   ├── factories/
+│   │   └── UserFactory.php
 │   ├── migrations/
+│   │   └── (17 migration files)
 │   └── seeders/
+│       ├── DatabaseSeeder.php
 │       └── PlanSeeder.php
 ├── resources/
 │   └── views/
@@ -397,10 +386,11 @@ planify-api/
 │           ├── invitation.blade.php
 │           └── task-assigned.blade.php
 ├── routes/
-│   └── api.php
+│   ├── api.php
+│   ├── console.php
+│   └── web.php
 └── tests/
     ├── Feature/
-    └── Unit/
 ```
 
 ---
@@ -412,7 +402,6 @@ planify-api/
 - PHP 8.3+
 - Composer
 - PostgreSQL
-- Node.js (for Reverb)
 
 ### Steps
 
@@ -472,12 +461,6 @@ MAIL_FROM_NAME=Planify
 STRIPE_KEY=
 STRIPE_SECRET=
 STRIPE_WEBHOOK_SECRET=
-
-REVERB_APP_ID=
-REVERB_APP_KEY=
-REVERB_APP_SECRET=
-REVERB_HOST=localhost
-REVERB_PORT=8080
 ```
 
 ---
@@ -490,9 +473,6 @@ php artisan serve
 
 # Start the queue worker (required for background jobs)
 php artisan queue:work
-
-# Start the Reverb WebSocket server (required for chat)
-php artisan reverb:start
 ```
 
 ---
