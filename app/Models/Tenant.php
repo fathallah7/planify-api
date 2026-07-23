@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Cashier\Billable;
 
 #[Fillable(['name', 'domain', 'plan_id', 'status', 'trial_ends_at'])]
 class Tenant extends Model
 {
-    use HasUuids;
+    use HasUuids, Billable;
 
     protected function casts(): array
     {
